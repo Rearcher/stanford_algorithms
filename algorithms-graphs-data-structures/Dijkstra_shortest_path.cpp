@@ -1,11 +1,14 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <set>
 using namespace std;
 
 /* @param graph: adjacent matrix, graph[i][j] = INT_MAX means there's no direct path from i to j
  * @param s: source vertex
  * @return: shortest path from s to other vertexes
+ *
+ * use adjacent list instead of adjacent matrix can reduce some complexity
  */
 vector<int> dijkstra(vector<vector<int>>& graph, int s) {
     int n = graph.size();
@@ -33,24 +36,33 @@ vector<int> dijkstra(vector<vector<int>>& graph, int s) {
     return dist;
 }
 
+// since priority_queue in c++ does not support remove operation, 
+// so I just use set as heap, since elements in set are ordered,
+// the top of heap is the same as the 1st element in set.
 vector<int> dijkstra_with_heap(vector<vector<int>>& graph, int s) {
     int n = graph.size();
     vector<int> dist(n, INT_MAX);
     dist[s] = 0;
 
-    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> minHeap;
-    minHeap.push({0, s});
+    set<pair<int, int>> minHeap;
+    minHeap.insert({0, s});
     while (!minHeap.empty()) {
-        int u = minHeap.top().second;
-        minHeap.pop();
+        int u = (*minHeap.begin()).second;
+        minHeap.erase(minHeap.begin());
 
         for (int i = 0; i < n; ++i) {
             if (graph[u][i] != INT_MAX && dist[i] > dist[u] + graph[u][i]) {
+                // remove old distance
+                auto iter = minHeap.find({dist[i], i});
+                if (iter != minHeap.end()) minHeap.erase(iter);
+
+                // insert new distance
                 dist[i] = dist[u] + graph[u][i];
-                minHeap.push({dist[i], i});
+                minHeap.insert({dist[i], i});
             }
         }
     }
+
     return dist;
 }
 
